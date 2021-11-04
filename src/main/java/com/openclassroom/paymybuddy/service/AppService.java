@@ -40,6 +40,43 @@ public class AppService {
         return friendEmailList;
     }
 
+    public boolean postFriend(UserNetwork newFriend) {
+        logger.info("UserNetwork - Ajout d'un nouvel ami : " + newFriend.getKey().getFriendEmail().getEmail());
+        boolean saved = false;
+        try { 
+            userNetworkRepo.save(newFriend);
+            saved = true;
+        }
+        catch(IllegalArgumentException e) { 
+            throw e;
+        }
+        return saved;
+    }
+
+    public boolean deleteFriend(String userEmail, String friendEmail) {
+        logger.info("UserNetwork - Suppression d'un ami : " + friendEmail);
+        boolean deleted = false;
+        Optional<User> user = usersRepo.findById(userEmail);
+        Optional<User> friend = usersRepo.findById(friendEmail);
+        if(user.isPresent() == false) {
+            logger.error("UserNetwork - Erreur : l'utilisateur " + userEmail + " n'existe pas dans la base de donnée");
+            return deleted;
+        }
+        else if(friend.isPresent() == false) {
+            logger.error("UserNetwork - Erreur : l'utilisateur " + friendEmail + " n'existe pas dans la base de donnée");
+            return deleted;
+        }
+        UserNetwork friendToDelete = new UserNetwork(user.get(), friend.get());
+        try {
+            userNetworkRepo.delete(friendToDelete);
+            deleted = true;
+        }
+        catch(IllegalArgumentException e) {
+            throw e;
+        }
+        return deleted;
+    }
+
     public List<Transaction> getTransactionHistoric(String userEmail) {
         logger.info("Transaction - Récupération de l'historique de transaction d'un utilisateur : " + userEmail);
         List<Transaction> transactionList = transactionsRepo.findAll();
@@ -49,6 +86,19 @@ public class AppService {
             { transactionHistoric.add(transactionList.get(i)); }
         }
         return transactionHistoric;
+    }
+
+    public boolean postTransaction(Transaction newTransaction) {
+        logger.info("Transaction - Nouvelle Transaction entre " + newTransaction.getKey().getGiverEmail().getEmail() + " et " + newTransaction.getKey().getReceiverEmail().getEmail());
+        boolean saved = false;
+        try { 
+            transactionsRepo.save(newTransaction);
+            saved = true;
+        }
+        catch(IllegalArgumentException e) { 
+            throw e;
+        }
+        return saved;
     }
 
     public User getUser(String userEmail) {
@@ -75,6 +125,32 @@ public class AppService {
         else {
             return true;
         }
+    }
+
+    public boolean postUser(User newUser) {
+        logger.info("User - Ajout d'un nouvel utilisateur : " + newUser.getEmail());
+        boolean saved = false;
+        try {
+            usersRepo.saveAndFlush(newUser);
+            saved = true;
+        }
+        catch(IllegalArgumentException e) {
+            throw e;
+        }
+        return saved;
+    }
+
+    public boolean putIban(String userEmail, String iban) {
+        logger.info("User - Ajout/Modification de l'IBAN de l'utilisateur : " + userEmail);
+        boolean updated = false;
+        try {
+            usersRepo.modifyUserIban(userEmail, iban);
+            updated = true;
+        }
+        catch(Exception e) {
+            throw e;
+        }
+        return updated;
     }
     
 }
