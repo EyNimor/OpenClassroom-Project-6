@@ -44,10 +44,12 @@ public class AppService {
         logger.info("UserNetwork - Ajout d'un nouvel ami : " + newFriend.getKey().getFriendEmail().getEmail());
         boolean saved = false;
         try { 
-            userNetworkRepo.save(newFriend);
+            userNetworkRepo.saveAndFlush(newFriend);
             saved = true;
         }
-        catch(IllegalArgumentException e) { 
+        catch(Exception e) { 
+            logger.error("UserNetwork - Erreur lors de la sauvegarde du nouvel ami : ");
+            e.printStackTrace();
             throw e;
         }
         return saved;
@@ -71,14 +73,16 @@ public class AppService {
             userNetworkRepo.delete(friendToDelete);
             deleted = true;
         }
-        catch(IllegalArgumentException e) {
+        catch(Exception e) {
+            logger.error("UserNetwork - Erreur lors de la suppresion de l'ami : ");
+            e.printStackTrace();
             throw e;
         }
         return deleted;
     }
 
     public List<Transaction> getTransactionHistoric(String userEmail) {
-        logger.info("Transaction - Récupération de l'historique de transaction d'un utilisateur : " + userEmail);
+        logger.info("Transaction - Récupération de l'historique de transaction de l'utilisateur : " + userEmail);
         List<Transaction> transactionList = transactionsRepo.findAll();
         List<Transaction> transactionHistoric = new ArrayList<>();
         for(int i = 0; i < transactionList.size(); i++) {
@@ -92,10 +96,12 @@ public class AppService {
         logger.info("Transaction - Nouvelle Transaction entre " + newTransaction.getKey().getGiverEmail().getEmail() + " et " + newTransaction.getKey().getReceiverEmail().getEmail());
         boolean saved = false;
         try { 
-            transactionsRepo.save(newTransaction);
+            transactionsRepo.saveAndFlush(newTransaction);
             saved = true;
         }
-        catch(IllegalArgumentException e) { 
+        catch(Exception e) {
+            logger.error("Transaction - Erreur lors de la sauvegarde de la transaction : ");
+            e.printStackTrace();
             throw e;
         }
         return saved;
@@ -107,9 +113,9 @@ public class AppService {
             User user = usersRepo.findById(userEmail).get();
             return user;
         } catch(NoSuchElementException e) {
-            logger.error("Erreur : aucun utilisateur n'est relié à cette adresse mail - " + userEmail);
+            logger.error("User - Erreur : aucun utilisateur n'est relié à cette adresse mail - " + userEmail);
             e.printStackTrace();
-            return null;
+            throw e;
         }
     }
 
@@ -117,9 +123,11 @@ public class AppService {
         logger.info("Connection - Vérification des identifiants : " + emailToVerify + ", " + passwordToVerify);
         Optional<User> hypotheticalUser = usersRepo.findById(emailToVerify);
         if(hypotheticalUser.isPresent() == false) {
+            logger.error("Connection - Mauvais email : " + passwordToVerify);
             return false;
         }
         else if(hypotheticalUser.get().getPassword() != passwordToVerify) {
+            logger.error("Connection - Mauvais mot de passe : " + passwordToVerify);
             return false;
         }
         else {
@@ -134,7 +142,9 @@ public class AppService {
             usersRepo.saveAndFlush(newUser);
             saved = true;
         }
-        catch(IllegalArgumentException e) {
+        catch(Exception e) {
+            logger.error("User - Erreur lors de la sauvegarde du nouvel utilisateur : ");
+            e.printStackTrace();
             throw e;
         }
         return saved;
@@ -143,14 +153,35 @@ public class AppService {
     public boolean putIban(String userEmail, String iban) {
         logger.info("User - Ajout/Modification de l'IBAN de l'utilisateur : " + userEmail);
         boolean updated = false;
-        try {
-            usersRepo.modifyUserIban(userEmail, iban);
+        Optional<User> userToModify = usersRepo.findById(userEmail);
+        if(userToModify.isPresent() == false) {
+            logger.error("User - Erreur : l'utilisateur " + userEmail + " n'existe pas dans la base de donnée");
+            return updated;
+        }
+        else {
+            User user = userToModify.get();
+            user.setIban(iban);
+            usersRepo.saveAndFlush(user);
             updated = true;
         }
-        catch(Exception e) {
+        return updated;
+    }
+
+    public boolean deleteUser(String userEmail, String userPassword) {
+        logger.info("User - Suppresion d'un utilisateur : " + userEmail);
+        boolean deleted = false;
+        if(verifyIdentifiers(userEmail, userPassword) == false) {
+            return deleted;
+        }
+        try {
+            usersRepo.deleteById(userEmail);
+            deleted = true;
+        } catch (Exception e) {
+            logger.error("User - Erreur lors de la suppresion de l'utilisateur : ");
+            e.printStackTrace();
             throw e;
         }
-        return updated;
+        return deleted;
     }
     
 }
