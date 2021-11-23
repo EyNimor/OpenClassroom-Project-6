@@ -23,25 +23,23 @@ public class UserEndpointController {
     @GetMapping(value = "/user")
     public ResponseEntity<User> getUserRequest(String userEmail) {
         logger.info("Requête GET, Endpoint 'User' - Récupération du profil d'un utilisateur : " + userEmail);
-        try {
-            User user = appService.getUser(userEmail);
-            ResponseEntity<User> response = new ResponseEntity<User>(user, HttpStatus.OK);
-            return response;
-        } catch(Exception e) {
-            throw e;
-        }
+        User user = appService.getUser(userEmail);
+        ResponseEntity<User> response = new ResponseEntity<User>(user, HttpStatus.OK);
+        return response;
     }
 
     @DeleteMapping(value = "/user")
     public ResponseEntity<Void> deleteUserRequest(String userEmail, String userPassword) {
         logger.info("Requête DELETE, Endpoint 'User' - Suppresion d'un utilisateur : " + userEmail);
-        try {
-            boolean isDeleted = appService.deleteUser(userEmail, userPassword);
-            ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.OK);
-            return response;
-        } catch(Exception e) {
-            throw e;
+        boolean isDeleted = appService.deleteUser(userEmail, userPassword);
+        ResponseEntity<Void> response;
+        if(isDeleted == false) {
+            response = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        } 
+        else {
+            response = new ResponseEntity<>(HttpStatus.OK);
         }
+        return response;
     }
     
 }

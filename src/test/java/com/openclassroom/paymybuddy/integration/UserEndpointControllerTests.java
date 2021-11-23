@@ -1,7 +1,6 @@
 package com.openclassroom.paymybuddy.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.NoSuchElementException;
@@ -30,8 +29,6 @@ public class UserEndpointControllerTests extends UserEndpointController {
     protected UsersRepository usersRepo;
 
     protected static TestsVariables vars;
-
-    private ConnectionEndpointControllerTests connectionTests;
 
     @BeforeAll
     static void setUp() {
