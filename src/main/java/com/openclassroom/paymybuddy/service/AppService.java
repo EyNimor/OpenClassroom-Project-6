@@ -3,6 +3,7 @@ package com.openclassroom.paymybuddy.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
@@ -34,12 +35,8 @@ public class AppService {
 
     public List<String> getFriends(String userEmail) {
         logger.info("UserNetwork - Récupération de la liste d'amis d'un utilisateur : " + userEmail);
-        List<UserNetwork> networkList = userNetworkRepo.findAll();
-        List<String> friendEmailList = new ArrayList<>();
-        for(int i = 0; i < networkList.size(); i++) {
-            if(networkList.get(i).getKey().getUserEmail().getEmail() == userEmail) { friendEmailList.add(networkList.get(i).getKey().getFriendEmail().getEmail()); }
-            if(networkList.get(i).getKey().getFriendEmail().getEmail() == userEmail) { friendEmailList.add(networkList.get(i).getKey().getUserEmail().getEmail()); }
-        }
+        List<String> friendEmailList = userNetworkRepo.findUserNetworkByUserEmail(userEmail).stream().map(n -> n.getKey().getUserEmail().getEmail()).collect(Collectors.toList());
+        friendEmailList.addAll(userNetworkRepo.findUserNetworkByFriendEmail(userEmail).stream().map(n -> n.getKey().getFriendEmail().getEmail()).collect(Collectors.toList()));
         return friendEmailList;
     }
 
@@ -143,12 +140,8 @@ public class AppService {
             return deleted;
         }
 
-        List<UserNetwork> networkList = userNetworkRepo.findAll();
-        List<UserNetwork> friendsToDelete = new ArrayList<>();
-        for(int i = 0; i < networkList.size(); i++) {
-            if(networkList.get(i).getKey().getUserEmail().getEmail() == userEmail) { friendsToDelete.add(networkList.get(i)); }
-            if(networkList.get(i).getKey().getFriendEmail().getEmail() == userEmail) { friendsToDelete.add(networkList.get(i)); }
-        }
+        List<UserNetwork> friendsToDelete = userNetworkRepo.findUserNetworkByUserEmail(userEmail).stream().collect(Collectors.toList());
+        friendsToDelete.addAll(userNetworkRepo.findUserNetworkByFriendEmail(userEmail).stream().collect(Collectors.toList()));
         if(friendsToDelete.isEmpty() == false) {
             userNetworkRepo.deleteAll(friendsToDelete);
         }
