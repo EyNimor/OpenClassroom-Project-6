@@ -12,6 +12,8 @@ import java.util.NoSuchElementException;
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.model.IbanToUpdate;
+import com.openclassroom.paymybuddy.model.Identifiers;
 import com.openclassroom.paymybuddy.model.TestsVariables;
 import com.openclassroom.paymybuddy.model.entity.Transaction;
 import com.openclassroom.paymybuddy.model.entity.User;
@@ -111,17 +113,17 @@ public class ServiceTests extends AppService {
     
     @Test
     void verifyIdentifiersTestIfIdentifiersAreCorrect() {
-        assertTrue(this.verifyIdentifiers(vars.getUserEmail(), vars.getUserPassword()));
+        assertTrue(this.verifyIdentifiers(new Identifiers(vars.getUserEmail(), vars.getUserPassword())));
     }
 
     @Test
     void verifyIdentifiersTestIfEmailIsIncorrect() {
-        assertFalse(this.verifyIdentifiers(vars.getBadEmail(), vars.getUserPassword()));
+        assertFalse(this.verifyIdentifiers(new Identifiers(vars.getBadEmail(), vars.getUserPassword())));
     }
 
     @Test
     void verifyIdentifiersTestIfPasswordIsIncorrect() {
-        assertFalse(this.verifyIdentifiers(vars.getUserEmail(), vars.getBadPassword()));
+        assertFalse(this.verifyIdentifiers(new Identifiers(vars.getUserEmail(), vars.getBadPassword())));
     }
     
     @Test
@@ -134,7 +136,7 @@ public class ServiceTests extends AppService {
     
     @Test
     void putNewIbanTest() {
-        assertTrue(this.putIban(vars.getUserEmail(), vars.getNewIban()));
+        assertTrue(this.putIban(new IbanToUpdate(vars.getUserEmail(), vars.getNewIban())));
 
         assertEquals(vars.getNewIban(), usersRepo.findById(vars.getUserEmail()).get().getIban());
     }

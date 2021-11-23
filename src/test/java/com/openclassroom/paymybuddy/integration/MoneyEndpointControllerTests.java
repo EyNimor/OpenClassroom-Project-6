@@ -9,6 +9,7 @@ import java.util.List;
 import com.openclassroom.paymybuddy.controller.MoneyEndpointController;
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.model.IbanToUpdate;
 import com.openclassroom.paymybuddy.model.TestsVariables;
 import com.openclassroom.paymybuddy.model.entity.Transaction;
 
@@ -67,7 +68,7 @@ public class MoneyEndpointControllerTests extends MoneyEndpointController {
 
     @Test
     void putNewIbanTest() {
-        assertEquals(this.putIbanRequest(vars.getUserEmail(), vars.getNewIban()).getStatusCode(), HttpStatus.CREATED);
+        assertEquals(this.putIbanRequest(new IbanToUpdate(vars.getUserEmail(), vars.getNewIban())).getStatusCode(), HttpStatus.CREATED);
 
         assertEquals(vars.getNewIban(), usersRepo.findById(vars.getUserEmail()).get().getIban());
     }

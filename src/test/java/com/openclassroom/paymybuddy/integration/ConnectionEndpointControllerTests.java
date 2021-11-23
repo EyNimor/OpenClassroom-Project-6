@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.openclassroom.paymybuddy.controller.ConnectionEndpointController;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.model.Identifiers;
 import com.openclassroom.paymybuddy.model.TestsVariables;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -37,17 +38,17 @@ public class ConnectionEndpointControllerTests extends ConnectionEndpointControl
 
     @Test
     void verifyIdentifiersTestIfIdentifiersAreCorrect() {
-        assertEquals(this.verifyIdentifiersRequest(vars.getUserEmail(), vars.getUserPassword()).getStatusCode(), HttpStatus.OK);
+        assertEquals(this.verifyIdentifiersRequest(new Identifiers(vars.getUserEmail(), vars.getUserPassword())).getStatusCode(), HttpStatus.OK);
     }
 
     @Test
     void verifyIdentifiersTestIfEmailIsIncorrect() {
-        assertEquals(this.verifyIdentifiersRequest(vars.getBadEmail(), vars.getUserPassword()).getStatusCode(), HttpStatus.UNAUTHORIZED);
+        assertEquals(this.verifyIdentifiersRequest(new Identifiers(vars.getBadEmail(), vars.getUserPassword())).getStatusCode(), HttpStatus.UNAUTHORIZED);
     }
 
     @Test
     void verifyIdentifiersTestIfPasswordIsIncorrect() {
-        assertEquals(this.verifyIdentifiersRequest(vars.getUserEmail(), vars.getBadPassword()).getStatusCode(), HttpStatus.UNAUTHORIZED);
+        assertEquals(this.verifyIdentifiersRequest(new Identifiers(vars.getUserEmail(), vars.getBadPassword())).getStatusCode(), HttpStatus.UNAUTHORIZED);
     }
     
     @Test
