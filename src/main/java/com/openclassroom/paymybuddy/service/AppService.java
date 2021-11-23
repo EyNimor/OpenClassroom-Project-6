@@ -142,6 +142,22 @@ public class AppService {
         if(verifyIdentifiers(new Identifiers(userEmail, userPassword)) == false) {
             return deleted;
         }
+
+        List<UserNetwork> networkList = userNetworkRepo.findAll();
+        List<UserNetwork> friendsToDelete = new ArrayList<>();
+        for(int i = 0; i < networkList.size(); i++) {
+            if(networkList.get(i).getKey().getUserEmail().getEmail() == userEmail) { friendsToDelete.add(networkList.get(i)); }
+            if(networkList.get(i).getKey().getFriendEmail().getEmail() == userEmail) { friendsToDelete.add(networkList.get(i)); }
+        }
+        if(friendsToDelete.isEmpty() == false) {
+            userNetworkRepo.deleteAll(friendsToDelete);
+        }
+
+        List<Transaction> transactionsToDelete = this.getTransactionHistoric(userEmail);
+        if(transactionsToDelete.isEmpty() == false) {
+            transactionsRepo.deleteAll(transactionsToDelete);
+        }
+        
         usersRepo.deleteById(userEmail);
         deleted = true;
         return deleted;

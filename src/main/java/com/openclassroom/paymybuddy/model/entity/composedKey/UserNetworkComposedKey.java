@@ -6,6 +6,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import com.openclassroom.paymybuddy.annotation.ExcludeFromJacocoGeneratedReport;
 import com.openclassroom.paymybuddy.model.entity.User;
 
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Embeddable @AllArgsConstructor @NoArgsConstructor
+@ExcludeFromJacocoGeneratedReport
 public class UserNetworkComposedKey implements Serializable {
 
     @ManyToOne

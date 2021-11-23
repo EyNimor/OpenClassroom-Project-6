@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.openclassroom.paymybuddy.controller.MoneyEndpointController;
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
+import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
 import com.openclassroom.paymybuddy.model.IbanToUpdate;
 import com.openclassroom.paymybuddy.model.TestsVariables;
@@ -30,6 +31,9 @@ public class MoneyEndpointControllerTests extends MoneyEndpointController {
     @Autowired
     protected TransactionsRepository transactionsRepo;
 
+    @Autowired
+    protected UserNetworkRepository userNetworkRepo;
+
     protected static TestsVariables vars;
 
     @BeforeAll
@@ -40,9 +44,11 @@ public class MoneyEndpointControllerTests extends MoneyEndpointController {
     @BeforeEach
     void setUpPerTest() {
         transactionsRepo.deleteAll();
+        userNetworkRepo.deleteAll();
         usersRepo.deleteAll();
 
         usersRepo.saveAll(vars.getUsersList());
+        userNetworkRepo.saveAll(vars.getNetworkList());
         transactionsRepo.saveAll(vars.getTransactionList());
     }
 

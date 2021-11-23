@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.NoSuchElementException;
 
 import com.openclassroom.paymybuddy.controller.UserEndpointController;
+import com.openclassroom.paymybuddy.dao.TransactionsRepository;
+import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
 import com.openclassroom.paymybuddy.model.TestsVariables;
 import com.openclassroom.paymybuddy.model.entity.User;
@@ -28,6 +30,12 @@ public class UserEndpointControllerTests extends UserEndpointController {
     @Autowired
     protected UsersRepository usersRepo;
 
+    @Autowired
+    protected TransactionsRepository transactionsRepo;
+
+    @Autowired
+    protected UserNetworkRepository userNetworkRepo;
+
     protected static TestsVariables vars;
 
     @BeforeAll
@@ -37,9 +45,13 @@ public class UserEndpointControllerTests extends UserEndpointController {
 
     @BeforeEach
     void setUpPerTest() {
+        transactionsRepo.deleteAll();
+        userNetworkRepo.deleteAll();
         usersRepo.deleteAll();
 
         usersRepo.saveAll(vars.getUsersList());
+        userNetworkRepo.saveAll(vars.getNetworkList());
+        transactionsRepo.saveAll(vars.getTransactionList());
     }
 
     @Test
@@ -50,7 +62,7 @@ public class UserEndpointControllerTests extends UserEndpointController {
 
     @Test
     void deleteUserTest() {
-        appService.postUser(vars.getNewUser());
+        usersRepo.save(vars.getNewUser());
         assertEquals(this.deleteUserRequest(vars.getNewUserEmail(), vars.getNewUserPassword()).getStatusCode(), HttpStatus.OK);
 
         assertThrows(NoSuchElementException.class, () -> { this.getUserRequest(vars.getNewUserEmail()).getBody(); });
