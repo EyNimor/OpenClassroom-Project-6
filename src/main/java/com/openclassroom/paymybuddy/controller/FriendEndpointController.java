@@ -2,7 +2,7 @@ package com.openclassroom.paymybuddy.controller;
 
 import java.util.List;
 
-import com.openclassroom.paymybuddy.model.entity.UserNetwork;
+import com.openclassroom.paymybuddy.model.NewFriend;
 import com.openclassroom.paymybuddy.service.AppService;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,15 +34,15 @@ public class FriendEndpointController {
     }
 
     @PostMapping(value = "/friend")
-    public ResponseEntity<Void> postFriendRequest(@RequestBody UserNetwork newFriend) {
-        logger.info("Requête POST, Endpoint 'UserNetwork' - Ajout d'un nouvel ami : " + newFriend.getKey().getFriendEmail().getEmail());
+    public ResponseEntity<Void> postFriendRequest(@RequestBody NewFriend newFriend) {
+        logger.info("Requête POST, Endpoint 'UserNetwork' - Ajout d'un nouvel ami : " + newFriend.getFriendEmail());
         appService.postFriend(newFriend);
         ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.CREATED);
         return response;
     }
 
     @DeleteMapping(value = "/friend")
-    public ResponseEntity<Void> deleteFriendRequest(@RequestParam(value = "userEmail") String userEmail,@RequestParam(value = "friendEmail") String friendEmail) {
+    public ResponseEntity<Void> deleteFriendRequest(@RequestParam(value = "userEmail") String userEmail, @RequestParam(value = "friendEmail") String friendEmail) {
         logger.info("Requête DELETE, Endpoint 'UserNetwork' - Suppression d'un ami : " + friendEmail + ", pour l'utilisateur : " + userEmail);
         appService.deleteFriend(userEmail, friendEmail);
         ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.OK);

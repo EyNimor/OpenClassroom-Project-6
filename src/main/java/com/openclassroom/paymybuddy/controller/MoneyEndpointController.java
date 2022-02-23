@@ -3,6 +3,7 @@ package com.openclassroom.paymybuddy.controller;
 import java.util.List;
 
 import com.openclassroom.paymybuddy.model.IbanToUpdate;
+import com.openclassroom.paymybuddy.model.TransactionToPost;
 import com.openclassroom.paymybuddy.model.entity.Transaction;
 import com.openclassroom.paymybuddy.service.AppService;
 
@@ -13,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,15 +37,21 @@ public class MoneyEndpointController {
     }
 
     @PostMapping(value = "/transaction")
-    public ResponseEntity<Void> postTransactionRequest(@RequestBody Transaction newTransaction) {
-        logger.info("Requête POST, Endpoint 'Money' - Nouvelle Transaction entre " + newTransaction.getKey().getGiverEmail().getEmail() + " et " + newTransaction.getKey().getReceiverEmail().getEmail());
-        appService.postTransaction(newTransaction);
-        ResponseEntity<Void> response = new ResponseEntity<>( HttpStatus.CREATED);
+    public ResponseEntity<Void> postTransactionRequest(@RequestBody TransactionToPost newTransaction) {
+        logger.info("Requête POST, Endpoint 'Money' - Nouvelle Transaction entre " + newTransaction.getGiverEmail() + " et " + newTransaction.getReceiverEmail());
+        ResponseEntity<Void> response;
+        if(newTransaction.getAmount() <= 0.0) {
+            response = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        else {
+            appService.postTransaction(newTransaction);
+            response = new ResponseEntity<>(HttpStatus.CREATED);
+        }
         return response;
     }
 
-    @PutMapping(value = "/userIban")
-    public ResponseEntity<Void> putIbanRequest(@RequestParam IbanToUpdate ibanToUpdate) {
+    @PostMapping(value = "/userIban")
+    public ResponseEntity<Void> putIbanRequest(@RequestBody IbanToUpdate ibanToUpdate) {
         logger.info("Requête PUT, Endpoint 'Money' - Ajout/Modification de l'IBAN de l'utilisateur : " + ibanToUpdate.toString());
         appService.putIban(ibanToUpdate);
         ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.CREATED);

@@ -10,10 +10,12 @@ import com.openclassroom.paymybuddy.controller.MoneyEndpointController;
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.methods.TestsMethods;
 import com.openclassroom.paymybuddy.model.IbanToUpdate;
 import com.openclassroom.paymybuddy.model.TestsVariables;
 import com.openclassroom.paymybuddy.model.entity.Transaction;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,8 @@ public class MoneyEndpointControllerTests extends MoneyEndpointController {
 
     protected static TestsVariables vars;
 
+    protected static TestsMethods testsMethods;
+
     @BeforeAll
     static void setUp() {
         vars = new TestsVariables();
@@ -43,9 +47,11 @@ public class MoneyEndpointControllerTests extends MoneyEndpointController {
 
     @BeforeEach
     void setUpPerTest() {
-        transactionsRepo.deleteAll();
-        userNetworkRepo.deleteAll();
-        usersRepo.deleteAll();
+        testsMethods = new TestsMethods(usersRepo, transactionsRepo, userNetworkRepo);
+
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
 
         usersRepo.saveAll(vars.getUsersList());
         userNetworkRepo.saveAll(vars.getNetworkList());
@@ -66,7 +72,7 @@ public class MoneyEndpointControllerTests extends MoneyEndpointController {
     void postNewTransaction() {
         usersRepo.save(vars.getNewUser());
         usersRepo.save(vars.getNewFriend());
-        assertEquals(this.postTransactionRequest(vars.getNewTransaction()).getStatusCode(), HttpStatus.CREATED);
+        assertEquals(this.postTransactionRequest(vars.getNewTransactionToPost()).getStatusCode(), HttpStatus.CREATED);
 
         boolean isSaved = transactionsRepo.findById(vars.getNewTransaction().getKey()).isPresent();
         assertTrue(isSaved);
@@ -77,6 +83,13 @@ public class MoneyEndpointControllerTests extends MoneyEndpointController {
         assertEquals(this.putIbanRequest(new IbanToUpdate(vars.getUserEmail(), vars.getNewIban())).getStatusCode(), HttpStatus.CREATED);
 
         assertEquals(vars.getNewIban(), usersRepo.findById(vars.getUserEmail()).get().getIban());
+    }
+
+    @AfterAll
+    static void cleanAfterTests() {
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
     }
     
 }

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,7 +22,7 @@ public class UserEndpointController {
     protected AppService appService;
 
     @GetMapping(value = "/user")
-    public ResponseEntity<User> getUserRequest(String userEmail) {
+    public ResponseEntity<User> getUserRequest(@RequestParam(value = "email") String userEmail) {
         logger.info("Requête GET, Endpoint 'User' - Récupération du profil d'un utilisateur : " + userEmail);
         User user = appService.getUser(userEmail);
         ResponseEntity<User> response = new ResponseEntity<User>(user, HttpStatus.OK);
@@ -29,7 +30,7 @@ public class UserEndpointController {
     }
 
     @DeleteMapping(value = "/user")
-    public ResponseEntity<Void> deleteUserRequest(String userEmail, String userPassword) {
+    public ResponseEntity<Void> deleteUserRequest(@RequestParam(value = "email") String userEmail, @RequestParam(value = "password") String userPassword) {
         logger.info("Requête DELETE, Endpoint 'User' - Suppresion d'un utilisateur : " + userEmail);
         boolean isDeleted = appService.deleteUser(userEmail, userPassword);
         ResponseEntity<Void> response;

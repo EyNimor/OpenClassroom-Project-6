@@ -1,18 +1,17 @@
 package com.openclassroom.paymybuddy.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.util.NoSuchElementException;
 
 import com.openclassroom.paymybuddy.controller.UserEndpointController;
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.methods.TestsMethods;
 import com.openclassroom.paymybuddy.model.TestsVariables;
 import com.openclassroom.paymybuddy.model.entity.User;
 import com.openclassroom.paymybuddy.service.AppService;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +37,8 @@ public class UserEndpointControllerTests extends UserEndpointController {
 
     protected static TestsVariables vars;
 
+    protected static TestsMethods testsMethods;
+
     @BeforeAll
     static void setUp() {
         vars = new TestsVariables();
@@ -45,9 +46,11 @@ public class UserEndpointControllerTests extends UserEndpointController {
 
     @BeforeEach
     void setUpPerTest() {
-        transactionsRepo.deleteAll();
-        userNetworkRepo.deleteAll();
-        usersRepo.deleteAll();
+        testsMethods = new TestsMethods(usersRepo, transactionsRepo, userNetworkRepo);
+
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
 
         usersRepo.saveAll(vars.getUsersList());
         userNetworkRepo.saveAll(vars.getNetworkList());
@@ -65,7 +68,15 @@ public class UserEndpointControllerTests extends UserEndpointController {
         usersRepo.save(vars.getNewUser());
         assertEquals(this.deleteUserRequest(vars.getNewUserEmail(), vars.getNewUserPassword()).getStatusCode(), HttpStatus.OK);
 
-        assertThrows(NoSuchElementException.class, () -> { this.getUserRequest(vars.getNewUserEmail()).getBody(); });
+        User emptyUser = new User();
+        assertEquals(emptyUser.toString(), this.getUserRequest(vars.getNewUserEmail()).getBody().toString());
+    }
+
+    @AfterAll
+    static void cleanAfterTests() {
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
     }
     
 }

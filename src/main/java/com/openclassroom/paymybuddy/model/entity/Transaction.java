@@ -22,18 +22,22 @@ public class Transaction implements Serializable {
 
     @EmbeddedId
     private TransactionComposedKey key;
+    @Column(name = "transaction_date")
+    Date transactionDate;
     @Column(name = "amount")
     private float amount;
     @Column(name = "description")
     private String description;
 
-    public Transaction(User giver, User receiver, Date transactionDate, float amount) {
-        this.setKey(new TransactionComposedKey(giver, receiver, transactionDate));
+    public Transaction(long numberId, User giver, User receiver, Date transactionDate, float amount) {
+        this.setKey(new TransactionComposedKey(numberId, giver, receiver));
+        this.setTransactionDate(transactionDate);
         this.setAmount(amount);
     }
 
-    public Transaction(User giver, User receiver, Date transactionDate, float amount, String description) {
-        this.setKey(new TransactionComposedKey(giver, receiver, transactionDate));
+    public Transaction(long numberId, User giver, User receiver, Date transactionDate, float amount, String description) {
+        this.setKey(new TransactionComposedKey(numberId, giver, receiver));
+        this.setTransactionDate(transactionDate);
         this.setAmount(amount);
         this.setDescription(description);
     }

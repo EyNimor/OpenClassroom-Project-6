@@ -1,5 +1,6 @@
 package com.openclassroom.paymybuddy.service;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +11,8 @@ import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
 import com.openclassroom.paymybuddy.model.IbanToUpdate;
 import com.openclassroom.paymybuddy.model.Identifiers;
+import com.openclassroom.paymybuddy.model.NewFriend;
+import com.openclassroom.paymybuddy.model.TransactionToPost;
 import com.openclassroom.paymybuddy.model.entity.Transaction;
 import com.openclassroom.paymybuddy.model.entity.User;
 import com.openclassroom.paymybuddy.model.entity.UserNetwork;
@@ -33,17 +36,27 @@ public class AppService {
     @Autowired
     protected UserNetworkRepository userNetworkRepo;
 
+    protected long getNewId(String userEmail) {
+        logger.info("UserNetwork - Création d'un nouvel ID de transaction");
+        List<Transaction> transactionList = getTransactionHistoric(userEmail);
+        return transactionList.size() + 1;
+    }
+
     public List<String> getFriends(String userEmail) {
         logger.info("UserNetwork - Récupération de la liste d'amis d'un utilisateur : " + userEmail);
-        List<String> friendEmailList = userNetworkRepo.findUserNetworkByUserEmail(userEmail).stream().map(n -> n.getKey().getUserEmail().getEmail()).collect(Collectors.toList());
-        friendEmailList.addAll(userNetworkRepo.findUserNetworkByFriendEmail(userEmail).stream().map(n -> n.getKey().getFriendEmail().getEmail()).collect(Collectors.toList()));
+        Optional<User> user = usersRepo.findById(userEmail);
+        List<UserNetwork> userNetworks = userNetworkRepo.findUserNetworkByUserEmail(user.get());
+        List<String> friendEmailList = userNetworks.stream().map(n -> n.getKey().getFriendEmail().getEmail()).collect(Collectors.toList());
         return friendEmailList;
     }
 
-    public boolean postFriend(UserNetwork newFriend) {
-        logger.info("UserNetwork - Ajout d'un nouvel ami : " + newFriend.getKey().getFriendEmail().getEmail());
+    public boolean postFriend(NewFriend newFriend) {
+        logger.info("UserNetwork - Ajout d'un nouvel ami : " + newFriend.getFriendEmail());
+        Optional<User> user = usersRepo.findById(newFriend.getUserEmail());
+        Optional<User> friend = usersRepo.findById(newFriend.getFriendEmail());
+        UserNetwork newRelation = new UserNetwork(user.get(), friend.get());
         boolean saved = false;
-        userNetworkRepo.saveAndFlush(newFriend);
+        userNetworkRepo.saveAndFlush(newRelation);
         saved = true;
         return saved;
     }
@@ -72,23 +85,64 @@ public class AppService {
         List<Transaction> transactionList = transactionsRepo.findAll();
         List<Transaction> transactionHistoric = new ArrayList<>();
         for(int i = 0; i < transactionList.size(); i++) {
-            if(transactionList.get(i).getKey().getGiverEmail().getEmail() == userEmail | transactionList.get(i).getKey().getReceiverEmail().getEmail() == userEmail) 
-            { transactionHistoric.add(transactionList.get(i)); }
+            if(transactionList.get(i).getKey().getGiverEmail().getEmail().equals(userEmail) || transactionList.get(i).getKey().getReceiverEmail().getEmail().equals(userEmail)) {
+                transactionHistoric.add(transactionList.get(i));
+            }
         }
         return transactionHistoric;
     }
 
-    public boolean postTransaction(Transaction newTransaction) {
-        logger.info("Transaction - Nouvelle Transaction entre " + newTransaction.getKey().getGiverEmail().getEmail() + " et " + newTransaction.getKey().getReceiverEmail().getEmail());
+    public boolean postTransaction(TransactionToPost transactionToPost) {
+        logger.info("Transaction - Nouvelle Transaction entre " + transactionToPost.getGiverEmail() + " et " + transactionToPost.getReceiverEmail());
         boolean saved = false;
-        transactionsRepo.saveAndFlush(newTransaction);
-        saved = true;
+        Optional<User> giver = usersRepo.findById(transactionToPost.getGiverEmail());
+        Optional<User> receiver = usersRepo.findById(transactionToPost.getReceiverEmail());
+
+        Date transactionDate;
+        if(transactionToPost.getTransactionDate() != null) {
+            transactionDate = transactionToPost.getTransactionDate();
+            logger.info("Transaction - Date et heure : " + transactionDate);
+        }
+        else {
+            transactionDate = new Date(System.currentTimeMillis());
+            logger.info("Transaction - Date et heure : " + transactionDate);
+        }
+
+        float giverWalletUpdated = giver.get().getWallet() - transactionToPost.getAmount();
+        float receiverWalletUpdated = receiver.get().getWallet() + transactionToPost.getAmount();
+        if(giverWalletUpdated >= 0.00) {
+            Transaction newTransaction;
+            long id = getNewId(transactionToPost.getGiverEmail());
+            if(transactionToPost.getDescription() == null) {
+                newTransaction = new Transaction(id, giver.get(), receiver.get(), transactionDate, transactionToPost.getAmount());
+            }
+            else {
+                newTransaction = new Transaction(id, giver.get(), receiver.get(), transactionDate, transactionToPost.getAmount(), transactionToPost.getDescription());
+            }
+            transactionsRepo.saveAndFlush(newTransaction);
+
+            giver.get().setWallet(giverWalletUpdated);
+            usersRepo.saveAndFlush(giver.get());
+            receiver.get().setWallet(receiverWalletUpdated);
+            usersRepo.saveAndFlush(receiver.get());
+
+            saved = true;
+        }
+        else {
+            logger.error("Transaction - Le compte Giver n'a pas assez sur son compte");
+        }
         return saved;
     }
 
     public User getUser(String userEmail) {
         logger.info("User - Récupération du profil d'un utilisateur : " + userEmail);
-        User user = usersRepo.findById(userEmail).get();
+        User user;
+        if(usersRepo.findById(userEmail).isPresent() == true) {
+            user = usersRepo.findById(userEmail).get();
+        }
+        else {
+            user = new User();
+        }
         return user;
     }
 
@@ -99,8 +153,8 @@ public class AppService {
             logger.error("Connection - Mauvais email : " + identifiers.getEmailToTest());
             return false;
         }
-        else if(hypotheticalUser.get().getPassword() != identifiers.getPasswordToTest()) {
-            logger.error("Connection - Mauvais mot de passe : " + identifiers.getPasswordToTest());
+        else if(hypotheticalUser.get().getPassword().equals(identifiers.getPasswordToTest()) == false) {
+            logger.error("Connection - Mauvais mot de passe ");
             return false;
         }
         else {
@@ -140,8 +194,10 @@ public class AppService {
             return deleted;
         }
 
-        List<UserNetwork> friendsToDelete = userNetworkRepo.findUserNetworkByUserEmail(userEmail).stream().collect(Collectors.toList());
-        friendsToDelete.addAll(userNetworkRepo.findUserNetworkByFriendEmail(userEmail).stream().collect(Collectors.toList()));
+        Optional<User> userToDelete = usersRepo.findById(userEmail);
+
+        List<UserNetwork> friendsToDelete = userNetworkRepo.findUserNetworkByUserEmail(userToDelete.get()).stream().collect(Collectors.toList());
+        friendsToDelete.addAll(userNetworkRepo.findUserNetworkByFriendEmail(userToDelete.get()).stream().collect(Collectors.toList()));
         if(friendsToDelete.isEmpty() == false) {
             userNetworkRepo.deleteAll(friendsToDelete);
         }

@@ -1,13 +1,18 @@
 package com.openclassroom.paymybuddy.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.openclassroom.paymybuddy.controller.ConnectionEndpointController;
+import com.openclassroom.paymybuddy.dao.TransactionsRepository;
+import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.methods.TestsMethods;
 import com.openclassroom.paymybuddy.model.Identifiers;
 import com.openclassroom.paymybuddy.model.TestsVariables;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +27,15 @@ public class ConnectionEndpointControllerTests extends ConnectionEndpointControl
     @Autowired
     protected UsersRepository usersRepo;
 
+    @Autowired
+    protected TransactionsRepository transactionsRepo;
+
+    @Autowired
+    protected UserNetworkRepository userNetworkRepo;
+
     protected static TestsVariables vars;
+
+    protected static TestsMethods testsMethods;
 
     @BeforeAll
     static void setUp() {
@@ -31,24 +44,30 @@ public class ConnectionEndpointControllerTests extends ConnectionEndpointControl
 
     @BeforeEach
     void setUpPerTest() {
-        usersRepo.deleteAll();
+        testsMethods = new TestsMethods(usersRepo, transactionsRepo, userNetworkRepo);
+
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
 
         usersRepo.saveAll(vars.getUsersList());
+        userNetworkRepo.saveAll(vars.getNetworkList());
+        transactionsRepo.saveAll(vars.getTransactionList());
     }
 
     @Test
     void verifyIdentifiersTestIfIdentifiersAreCorrect() {
-        assertEquals(this.verifyIdentifiersRequest(new Identifiers(vars.getUserEmail(), vars.getUserPassword())).getStatusCode(), HttpStatus.OK);
+        assertTrue(this.verifyIdentifiersRequest(new Identifiers(vars.getUserEmail(), vars.getUserPassword())).getBody());
     }
 
     @Test
     void verifyIdentifiersTestIfEmailIsIncorrect() {
-        assertEquals(this.verifyIdentifiersRequest(new Identifiers(vars.getBadEmail(), vars.getUserPassword())).getStatusCode(), HttpStatus.UNAUTHORIZED);
+        assertFalse(this.verifyIdentifiersRequest(new Identifiers(vars.getBadEmail(), vars.getUserPassword())).getBody());
     }
 
     @Test
     void verifyIdentifiersTestIfPasswordIsIncorrect() {
-        assertEquals(this.verifyIdentifiersRequest(new Identifiers(vars.getUserEmail(), vars.getBadPassword())).getStatusCode(), HttpStatus.UNAUTHORIZED);
+        assertFalse(this.verifyIdentifiersRequest(new Identifiers(vars.getUserEmail(), vars.getBadPassword())).getBody());
     }
     
     @Test
@@ -57,6 +76,13 @@ public class ConnectionEndpointControllerTests extends ConnectionEndpointControl
 
         boolean isSaved = usersRepo.findById(vars.getNewUserEmail()).isPresent();
         assertTrue(isSaved);
+    }
+
+    @AfterAll
+    static void cleanAfterTests() {
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
     }
 
 }

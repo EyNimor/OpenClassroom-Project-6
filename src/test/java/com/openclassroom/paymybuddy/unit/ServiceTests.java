@@ -2,16 +2,15 @@ package com.openclassroom.paymybuddy.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.methods.TestsMethods;
 import com.openclassroom.paymybuddy.model.IbanToUpdate;
 import com.openclassroom.paymybuddy.model.Identifiers;
 import com.openclassroom.paymybuddy.model.TestsVariables;
@@ -19,6 +18,7 @@ import com.openclassroom.paymybuddy.model.entity.Transaction;
 import com.openclassroom.paymybuddy.model.entity.User;
 import com.openclassroom.paymybuddy.service.AppService;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +40,8 @@ public class ServiceTests extends AppService {
     @Autowired
     protected UserNetworkRepository userNetworkRepo;
 
+    protected static TestsMethods testsMethods;
+
     @BeforeAll
     static void setUp() {
         vars = new TestsVariables();
@@ -47,9 +49,11 @@ public class ServiceTests extends AppService {
 
     @BeforeEach
     void setUpPerTest() {
-        transactionsRepo.deleteAll();
-        userNetworkRepo.deleteAll();
-        usersRepo.deleteAll();
+        testsMethods = new TestsMethods(usersRepo, transactionsRepo, userNetworkRepo);
+
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
 
         usersRepo.saveAll(vars.getUsersList());
         userNetworkRepo.saveAll(vars.getNetworkList());
@@ -70,7 +74,7 @@ public class ServiceTests extends AppService {
     void postNewFriendTest() {
         usersRepo.save(vars.getNewUser());
         usersRepo.save(vars.getNewFriend());
-        assertTrue(this.postFriend(vars.getNewUserNetwork()));
+        assertTrue(this.postFriend(vars.getNewNewFriend()));
 
         boolean isSaved = userNetworkRepo.findById(vars.getNewUserNetwork().getKey()).isPresent();
         assertTrue(isSaved);
@@ -99,7 +103,7 @@ public class ServiceTests extends AppService {
     void postNewTransaction() {
         usersRepo.save(vars.getNewUser());
         usersRepo.save(vars.getNewFriend());
-        assertTrue(this.postTransaction(vars.getNewTransaction()));
+        assertTrue(this.postTransaction(vars.getNewTransactionToPost()));
 
         boolean isSaved = transactionsRepo.findById(vars.getNewTransaction().getKey()).isPresent();
         assertTrue(isSaved);
@@ -146,7 +150,15 @@ public class ServiceTests extends AppService {
         createAccountTest();
         assertTrue(this.deleteUser(vars.getNewUserEmail(), vars.getNewUserPassword()));
 
-        assertThrows(NoSuchElementException.class, () -> { this.getUser(vars.getNewUserEmail()); });
+        User emptyUser = new User();
+        assertEquals(emptyUser.toString(), this.getUser(vars.getNewUserEmail()).toString());
+    }
+
+    @AfterAll
+    static void cleanAfterTests() {
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
     }
     
 }

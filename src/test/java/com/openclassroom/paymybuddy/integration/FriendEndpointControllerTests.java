@@ -8,9 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.openclassroom.paymybuddy.controller.FriendEndpointController;
+import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
+import com.openclassroom.paymybuddy.methods.TestsMethods;
 import com.openclassroom.paymybuddy.model.TestsVariables;
+
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,9 +30,14 @@ public class FriendEndpointControllerTests extends FriendEndpointController {
     protected UsersRepository usersRepo;
 
     @Autowired
+    protected TransactionsRepository transactionsRepo;
+
+    @Autowired
     protected UserNetworkRepository userNetworkRepo;
 
     protected static TestsVariables vars;
+
+    protected static TestsMethods testsMethods;
 
     @BeforeAll
     static void setUp() {
@@ -37,11 +46,15 @@ public class FriendEndpointControllerTests extends FriendEndpointController {
 
     @BeforeEach
     void setUpPerTest() {
-        userNetworkRepo.deleteAll();
-        usersRepo.deleteAll();
+        testsMethods = new TestsMethods(usersRepo, transactionsRepo, userNetworkRepo);
+
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
 
         usersRepo.saveAll(vars.getUsersList());
         userNetworkRepo.saveAll(vars.getNetworkList());
+        transactionsRepo.saveAll(vars.getTransactionList());
     }
 
     @Test
@@ -58,7 +71,7 @@ public class FriendEndpointControllerTests extends FriendEndpointController {
     void postNewFriendTest() {
         usersRepo.save(vars.getNewUser());
         usersRepo.save(vars.getNewFriend());
-        assertEquals(this.postFriendRequest(vars.getNewUserNetwork()).getStatusCode(), HttpStatus.CREATED);
+        assertEquals(this.postFriendRequest(vars.getNewNewFriend()).getStatusCode(), HttpStatus.CREATED);
 
         boolean isSaved = userNetworkRepo.findById(vars.getNewUserNetwork().getKey()).isPresent();
         assertTrue(isSaved);
@@ -71,6 +84,13 @@ public class FriendEndpointControllerTests extends FriendEndpointController {
 
         boolean isSaved = userNetworkRepo.findById(vars.getNewUserNetwork().getKey()).isPresent();
         assertFalse(isSaved);
+    }
+
+    @AfterAll
+    static void cleanAfterTests() {
+        testsMethods.cleanTransactionTable();
+        testsMethods.cleanUserNetworkTable();
+        testsMethods.cleanUserTable();
     }
 
 }

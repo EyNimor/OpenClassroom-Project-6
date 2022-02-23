@@ -24,25 +24,32 @@ public class ConnectionEndpointController {
     protected AppService appService;
 
     @PostMapping(value = "/goodIdentifiers")
-    public ResponseEntity<Void> verifyIdentifiersRequest(@RequestBody Identifiers identifiers) {
+    public ResponseEntity<Boolean> verifyIdentifiersRequest(@RequestBody Identifiers identifiers) {
         logger.info("Requête GET, Endpoint 'Connection' - Vérification des identifiants : " + identifiers.toString());
         boolean isIdentifiersCorrects = appService.verifyIdentifiers(identifiers);
-        ResponseEntity<Void> response;
+        ResponseEntity<Boolean> response;
         if(isIdentifiersCorrects == true) {
-            response = new ResponseEntity<>(HttpStatus.OK);
+            response = new ResponseEntity<Boolean>(true, HttpStatus.OK);
         }
         else {
-            response = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            response = new ResponseEntity<Boolean>(false, HttpStatus.OK);
         }
         return response;
     }
 
-    @PostMapping(value = "createAccount")
+    @PostMapping(value = "/createAccount")
     public ResponseEntity<Void> postUserRequest(@RequestBody User newUser) {
         logger.info("Requête POST, Endpoint 'Connection' - Ajout d'un nouvel utilisateur : " + newUser.getEmail());
-        appService.postUser(newUser);
-        ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.CREATED);
-        return response;
+        if(newUser.getFirstName().isEmpty() || newUser.getLastName().isEmpty() || newUser.getEmail().isEmpty() || newUser.getPassword().isEmpty()) {
+            logger.error("Endpoint 'Connection' - Au moins l'une des informations nécessaire à la création d'un compte est vide");
+            ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.OK);
+            return response;
+        }
+        else {
+            appService.postUser(newUser);
+            ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.CREATED);
+            return response;
+        }
     }
     
 }

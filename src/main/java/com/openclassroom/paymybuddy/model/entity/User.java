@@ -37,5 +37,13 @@ public class User implements Serializable {
         this.setLastName(lastName);
         this.setPassword(password);
     }
+
+    public User(String email, String firstName, String lastName, String password, float wallet) {
+        this.setEmail(email);
+        this.setFirstName(firstName);
+        this.setLastName(lastName);
+        this.setPassword(password);
+        this.setWallet(wallet);
+    }
     
 }
