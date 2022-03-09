@@ -13,7 +13,7 @@ Note : ces dépendances sont uniquement les dépendances **directes** de l'appli
 ## Installation
 
 1. Installez toute les dépendances **dans l'ordre** ;
-2. Téléchargez le code du backend (https://github.com/EyNimor/OpenClassroom-Project-6) et du frontend (https://github.com/EyNimor/pay-my-buddy-frontend) sur GitHub ;
+2. Téléchargez le code du [backend](https://github.com/EyNimor/pay-my-buddy-backend "backend") et du [frontend](https://github.com/EyNimor/pay-my-buddy-frontend "frontend") sur GitHub ;
 3. Extraire les deux archives, vous devriez avoir deux dossier avec "-master" à la fin, le code est à l'intérieur ;
 4. Lancez Wampserver et dans PHPMyAdmin, Importez le script .sql pour créez la base de donnée ;
 
