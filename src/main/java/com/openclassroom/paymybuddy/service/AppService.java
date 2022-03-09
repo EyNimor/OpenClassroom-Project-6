@@ -107,9 +107,11 @@ public class AppService {
             transactionDate = new Date(System.currentTimeMillis());
             logger.info("Transaction - Date et heure : " + transactionDate);
         }
+        float amountToGive = transactionToPost.getAmount();
+        float amountToSubstract = amountToGive + (amountToGive / 200);
 
-        float giverWalletUpdated = giver.get().getWallet() - transactionToPost.getAmount();
-        float receiverWalletUpdated = receiver.get().getWallet() + transactionToPost.getAmount();
+        float giverWalletUpdated = giver.get().getWallet() - amountToSubstract;
+        float receiverWalletUpdated = receiver.get().getWallet() + amountToGive;
         if(giverWalletUpdated >= 0.00) {
             Transaction newTransaction;
             long id = getNewId(transactionToPost.getGiverEmail());

@@ -44,8 +44,13 @@ public class MoneyEndpointController {
             response = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         else {
-            appService.postTransaction(newTransaction);
-            response = new ResponseEntity<>(HttpStatus.CREATED);
+            boolean saved = appService.postTransaction(newTransaction);
+            if(saved) {
+                response = new ResponseEntity<>(HttpStatus.CREATED);
+            }
+            else {
+                response = new ResponseEntity<>(HttpStatus.OK);
+            }
         }
         return response;
     }

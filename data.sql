@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : mer. 23 fév. 2022 à 15:22
+-- Généré le : mar. 08 mars 2022 à 14:50
 -- Version du serveur :  5.7.31
 -- Version de PHP : 7.3.21
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   `giver_email` varchar(250) NOT NULL,
   `receiver_email` varchar(250) NOT NULL,
   `transaction_date` date NOT NULL,
-  `amount` float DEFAULT NULL,
+  `amount` decimal(18,2) DEFAULT NULL,
   `description` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`giver_email`,`receiver_email`,`number_id`) USING BTREE,
   KEY `fk_receiver_email` (`receiver_email`)
@@ -68,16 +68,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   `last_Name` varchar(250) NOT NULL,
   `password` varchar(250) NOT NULL,
   `iban` varchar(250) DEFAULT NULL,
-  `wallet` float NOT NULL DEFAULT '0',
+  `wallet` decimal(18,2) NOT NULL DEFAULT '0.00',
   PRIMARY KEY (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Déchargement des données de la table `users`
 --
-
-INSERT INTO `users` (`email`, `first_Name`, `last_Name`, `password`, `iban`, `wallet`) VALUES
-('new-friend-email@testmail.com', 'Jean', 'NewTestFriend', 'NewFriendPassword', NULL, 1000000000);
 
 --
 -- Contraintes pour les tables déchargées
