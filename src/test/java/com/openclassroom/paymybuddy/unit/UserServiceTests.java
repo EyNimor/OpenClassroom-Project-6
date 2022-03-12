@@ -1,8 +1,8 @@
-package com.openclassroom.paymybuddy.integration;
+package com.openclassroom.paymybuddy.unit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.openclassroom.paymybuddy.controller.UserEndpointController;
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
@@ -17,14 +17,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest @TestPropertySource(locations="classpath:application-test.properties")
-public class UserEndpointControllerTests extends UserEndpointController {
+public class UserServiceTests extends UserService {
 
-    @Autowired
-    protected UserService appService;
+    protected static TestsVariables vars;
+    protected static TestsMethods testsMethods;
 
     @Autowired
     protected UsersRepository usersRepo;
@@ -34,10 +33,6 @@ public class UserEndpointControllerTests extends UserEndpointController {
 
     @Autowired
     protected UserNetworkRepository userNetworkRepo;
-
-    protected static TestsVariables vars;
-
-    protected static TestsMethods testsMethods;
 
     @BeforeAll
     static void setUp() {
@@ -56,20 +51,19 @@ public class UserEndpointControllerTests extends UserEndpointController {
         userNetworkRepo.saveAll(vars.getNetworkList());
         transactionsRepo.saveAll(vars.getTransactionList());
     }
-
+    
     @Test
     void getUserTest() {
-        User returnedUser = this.getUserRequest(vars.getUserEmail()).getBody();
+        User returnedUser = this.getUser(vars.getUserEmail());
         assertEquals(vars.getUser().toString(), returnedUser.toString());
     }
 
     @Test
     void deleteUserTest() {
-        usersRepo.save(vars.getNewUser());
-        assertEquals(this.deleteUserRequest(vars.getNewUserEmail(), vars.getNewUserPassword()).getStatusCode(), HttpStatus.OK);
+        assertTrue(this.deleteUser(vars.getUserEmail(), vars.getUserPassword()));
 
         User emptyUser = new User();
-        assertEquals(emptyUser.toString(), this.getUserRequest(vars.getNewUserEmail()).getBody().toString());
+        assertEquals(emptyUser.toString(), this.getUser(vars.getUserEmail()).toString());
     }
 
     @AfterAll

@@ -11,12 +11,8 @@ import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
 import com.openclassroom.paymybuddy.methods.TestsMethods;
-import com.openclassroom.paymybuddy.model.IbanToUpdate;
-import com.openclassroom.paymybuddy.model.Identifiers;
 import com.openclassroom.paymybuddy.model.TestsVariables;
-import com.openclassroom.paymybuddy.model.entity.Transaction;
-import com.openclassroom.paymybuddy.model.entity.User;
-import com.openclassroom.paymybuddy.service.AppService;
+import com.openclassroom.paymybuddy.service.FriendService;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,9 +23,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest @TestPropertySource(locations="classpath:application-test.properties")
-public class ServiceTests extends AppService {
+public class FriendServiceTests extends FriendService {
 
     protected static TestsVariables vars;
+    protected static TestsMethods testsMethods;
 
     @Autowired
     protected UsersRepository usersRepo;
@@ -39,8 +36,6 @@ public class ServiceTests extends AppService {
 
     @Autowired
     protected UserNetworkRepository userNetworkRepo;
-
-    protected static TestsMethods testsMethods;
 
     @BeforeAll
     static void setUp() {
@@ -87,71 +82,6 @@ public class ServiceTests extends AppService {
 
         boolean isSaved = userNetworkRepo.findById(vars.getNewUserNetwork().getKey()).isPresent();
         assertFalse(isSaved);
-    }
-
-    @Test
-    void getTransactionHistoricTest() {
-        List<Transaction> expectedTransactionList = new ArrayList<>();
-        expectedTransactionList.add(vars.getTransaction1());
-        expectedTransactionList.add(vars.getTransaction2());
-
-        List<Transaction> returnedTransactionList = this.getTransactionHistoric(vars.getFriend1Email());
-        assertEquals(expectedTransactionList.toString(), returnedTransactionList.toString());
-    }
-
-    @Test
-    void postNewTransaction() {
-        usersRepo.save(vars.getNewUser());
-        usersRepo.save(vars.getNewFriend());
-        assertTrue(this.postTransaction(vars.getNewTransactionToPost()));
-
-        boolean isSaved = transactionsRepo.findById(vars.getNewTransaction().getKey()).isPresent();
-        assertTrue(isSaved);
-    }
-    
-    @Test
-    void getUserTest() {
-        User returnedUser = this.getUser(vars.getUserEmail());
-        assertEquals(vars.getUser().toString(), returnedUser.toString());
-    }
-    
-    @Test
-    void verifyIdentifiersTestIfIdentifiersAreCorrect() {
-        assertTrue(this.verifyIdentifiers(new Identifiers(vars.getUserEmail(), vars.getUserPassword())));
-    }
-
-    @Test
-    void verifyIdentifiersTestIfEmailIsIncorrect() {
-        assertFalse(this.verifyIdentifiers(new Identifiers(vars.getBadEmail(), vars.getUserPassword())));
-    }
-
-    @Test
-    void verifyIdentifiersTestIfPasswordIsIncorrect() {
-        assertFalse(this.verifyIdentifiers(new Identifiers(vars.getUserEmail(), vars.getBadPassword())));
-    }
-    
-    @Test
-    void createAccountTest() {
-        assertTrue(this.postUser(vars.getNewUser()));
-
-        boolean isSaved = usersRepo.findById(vars.getNewUserEmail()).isPresent();
-        assertTrue(isSaved);
-    }
-    
-    @Test
-    void putNewIbanTest() {
-        assertTrue(this.putIban(new IbanToUpdate(vars.getUserEmail(), vars.getNewIban())));
-
-        assertEquals(vars.getNewIban(), usersRepo.findById(vars.getUserEmail()).get().getIban());
-    }
-
-    @Test
-    void deleteUserTest() {
-        createAccountTest();
-        assertTrue(this.deleteUser(vars.getNewUserEmail(), vars.getNewUserPassword()));
-
-        User emptyUser = new User();
-        assertEquals(emptyUser.toString(), this.getUser(vars.getNewUserEmail()).toString());
     }
 
     @AfterAll

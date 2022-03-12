@@ -1,15 +1,15 @@
-package com.openclassroom.paymybuddy.integration;
+package com.openclassroom.paymybuddy.unit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.openclassroom.paymybuddy.controller.UserEndpointController;
 import com.openclassroom.paymybuddy.dao.TransactionsRepository;
 import com.openclassroom.paymybuddy.dao.UserNetworkRepository;
 import com.openclassroom.paymybuddy.dao.UsersRepository;
 import com.openclassroom.paymybuddy.methods.TestsMethods;
+import com.openclassroom.paymybuddy.model.Identifiers;
 import com.openclassroom.paymybuddy.model.TestsVariables;
-import com.openclassroom.paymybuddy.model.entity.User;
-import com.openclassroom.paymybuddy.service.UserService;
+import com.openclassroom.paymybuddy.service.ConnectionService;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,14 +17,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest @TestPropertySource(locations="classpath:application-test.properties")
-public class UserEndpointControllerTests extends UserEndpointController {
+public class ConnectionServiceTests extends ConnectionService {
 
-    @Autowired
-    protected UserService appService;
+    protected static TestsVariables vars;
+    protected static TestsMethods testsMethods;
 
     @Autowired
     protected UsersRepository usersRepo;
@@ -34,10 +33,6 @@ public class UserEndpointControllerTests extends UserEndpointController {
 
     @Autowired
     protected UserNetworkRepository userNetworkRepo;
-
-    protected static TestsVariables vars;
-
-    protected static TestsMethods testsMethods;
 
     @BeforeAll
     static void setUp() {
@@ -58,18 +53,26 @@ public class UserEndpointControllerTests extends UserEndpointController {
     }
 
     @Test
-    void getUserTest() {
-        User returnedUser = this.getUserRequest(vars.getUserEmail()).getBody();
-        assertEquals(vars.getUser().toString(), returnedUser.toString());
+    void verifyIdentifiersTestIfIdentifiersAreCorrect() {
+        assertTrue(this.verifyIdentifiers(new Identifiers(vars.getUserEmail(), vars.getUserPassword())));
     }
 
     @Test
-    void deleteUserTest() {
-        usersRepo.save(vars.getNewUser());
-        assertEquals(this.deleteUserRequest(vars.getNewUserEmail(), vars.getNewUserPassword()).getStatusCode(), HttpStatus.OK);
+    void verifyIdentifiersTestIfEmailIsIncorrect() {
+        assertFalse(this.verifyIdentifiers(new Identifiers(vars.getBadEmail(), vars.getUserPassword())));
+    }
 
-        User emptyUser = new User();
-        assertEquals(emptyUser.toString(), this.getUserRequest(vars.getNewUserEmail()).getBody().toString());
+    @Test
+    void verifyIdentifiersTestIfPasswordIsIncorrect() {
+        assertFalse(this.verifyIdentifiers(new Identifiers(vars.getUserEmail(), vars.getBadPassword())));
+    }
+    
+    @Test
+    void createAccountTest() {
+        assertTrue(this.postUser(vars.getNewUser()));
+
+        boolean isSaved = usersRepo.findById(vars.getNewUserEmail()).isPresent();
+        assertTrue(isSaved);
     }
 
     @AfterAll

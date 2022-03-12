@@ -2,11 +2,12 @@ package com.openclassroom.paymybuddy.controller;
 
 import com.openclassroom.paymybuddy.model.Identifiers;
 import com.openclassroom.paymybuddy.model.entity.User;
-import com.openclassroom.paymybuddy.service.AppService;
+import com.openclassroom.paymybuddy.service.ServiceInterface;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,22 +19,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/connection")
 public class ConnectionEndpointController {
 
-    private static final Logger logger = LogManager.getLogger("AppService");
+    private static final Logger logger = LogManager.getLogger("ConnectionEndpointController");
 
     @Autowired
-    protected AppService appService;
+    @Qualifier("connectionService")
+    protected ServiceInterface service;
 
     @PostMapping(value = "/goodIdentifiers")
     public ResponseEntity<Boolean> verifyIdentifiersRequest(@RequestBody Identifiers identifiers) {
         logger.info("Requête GET, Endpoint 'Connection' - Vérification des identifiants : " + identifiers.toString());
-        boolean isIdentifiersCorrects = appService.verifyIdentifiers(identifiers);
-        ResponseEntity<Boolean> response;
-        if(isIdentifiersCorrects == true) {
-            response = new ResponseEntity<Boolean>(true, HttpStatus.OK);
-        }
-        else {
-            response = new ResponseEntity<Boolean>(false, HttpStatus.OK);
-        }
+        boolean isIdentifiersCorrects = service.verifyIdentifiers(identifiers);
+        ResponseEntity<Boolean> response = new ResponseEntity<Boolean>(isIdentifiersCorrects, HttpStatus.OK);
         return response;
     }
 
@@ -46,7 +42,7 @@ public class ConnectionEndpointController {
             return response;
         }
         else {
-            appService.postUser(newUser);
+            service.postUser(newUser);
             ResponseEntity<Void> response = new ResponseEntity<>(HttpStatus.CREATED);
             return response;
         }
