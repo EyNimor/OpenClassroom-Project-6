@@ -21,5 +21,5 @@ Note : ces dépendances sont uniquement les dépendances **directes** de l'appli
 
 1. Lancez Wampserver s'il ne l'est pas déjà ;
 2. Allez dans le dossier du backend, ouvrez un terminal et lancez la commande `mvn spring-boot:run` ;
-3. Allez dans le dossier du frontend, ouvrez un terminal et lancer la commande `npm run serve` ;
+3. Allez dans le dossier du frontend, ouvrez un terminal et lancer la commande `npm run dev` ;
 4. Allez à l'adresse affiché dans le terminal du frontend, la page de LogIn de l'application devrait s'afficher ;
